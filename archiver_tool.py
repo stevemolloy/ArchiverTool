@@ -70,7 +70,7 @@ class Signal:
         """The attribute ID of this record in the archiver"""
         if not self._att_id:
             result = self.id_future.result()
-            self._att_id = result.one().att_conf_id
+            self._att_id = result[0].att_conf_id
         return self._att_id
 
     @property
@@ -78,7 +78,7 @@ class Signal:
         """The type of the date in the archiver"""
         if not self._datatype:
             result = self.datatype_future.result()
-            self._datatype = result.one().data_type
+            self._datatype = result[0].data_type
         return self._datatype
 
     @property
