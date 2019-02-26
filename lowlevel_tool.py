@@ -9,11 +9,14 @@ def parse_async_results(results):
     return list(chain(*result_sets))
 
 
-class Signal:
+class LowlevelSignal:
     """
     Represents a signal found in the HDB++ archiver.
     Each instance of this class contains its own session, and so
     can execute queries easily during its entire lifetime.
+
+    This class should only be used when really low-level access
+    to Cassandra is needed.  It will only work on the Green network.
     """
     def __init__(self, signal):
         self.att = signal
