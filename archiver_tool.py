@@ -22,23 +22,28 @@ def makequerypayload(signal, start, end):
             }
 
 def parse_response(resp):
-    return json.loads(resp.text)
+    data = json.loads(resp.text)[0]
+    output = []
+    output.append('# ' + data['target'])
+    output.append('# Time, Value')
+    for vals in data['datapoints']:
+        output.append('{}, {}'.format(vals[1], vals[0]))
+    return '\n'.join(output)
 
 @asyncio.coroutine
 def do_request(args):
     loop = asyncio.get_event_loop()
-    payload = makequerypayload(args.query, args.start, args.end)
-    future0 = loop.run_in_executor(
-            None,
-            partial(requests.post, url=QUERYURL, json=payload),
-            )
-    future1 = loop.run_in_executor(
-            None,
-            partial(requests.post, url=QUERYURL, json=payload),
-            )
-    response0 = yield from future0
-    response1 = yield from future1
-    return [response0, response1]
+    futures, responses = [], []
+    for sig in args.signals:
+        payload = makequerypayload(sig, args.start, args.end)
+        futures.append(loop.run_in_executor(
+                None,
+                partial(requests.post, url=QUERYURL, json=payload),
+                ))
+    for fut in futures:
+        resp = yield from fut
+        responses.append(resp)
+    return responses
 
 if __name__=="__main__":
     parser = ArgumentParser(description='Get data from HDB++ archiver')
@@ -62,23 +67,11 @@ if __name__=="__main__":
             )
 
     args = parser.parse_args()
+    print(args)
 
     loop = asyncio.get_event_loop()
     response = loop.run_until_complete(do_request(args))
-    print([parse_response(resp) for resp in response])
-
-    # r = requests.post(
-    #         url=QUERYURL,
-    #         json=makequerypayload(args.query, args.start, args.end)
-    #         )
-    # print(json.loads(r.text))
-
-    if args.searchterm is not None:
-        r = requests.post(
-                url=SEARCHURL,
-                json=makesearchpayload(args.searchterm),
-                )
-        reply = json.loads(r.text)
-        for val in reply:
-            print(val)
+    # print([parse_response(resp) for resp in response])
+    for resp in response:
+        print(parse_response(resp))
 
