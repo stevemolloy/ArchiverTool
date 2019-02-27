@@ -22,7 +22,13 @@ def makequerypayload(signal, start, end):
             }
 
 def parse_response(resp):
-    data = json.loads(resp.text)[0]
+    if not resp.status_code == 200:
+        data = {
+                'target': 'Attribute not found in HDB++',
+                'datapoints': [],
+                }
+    else:
+        data = json.loads(resp.text)[0]
     output = []
     output.append('# ' + data['target'])
     output.append('# Time, Value')
@@ -67,11 +73,9 @@ if __name__=="__main__":
             )
 
     args = parser.parse_args()
-    print(args)
 
     loop = asyncio.get_event_loop()
     response = loop.run_until_complete(do_request(args))
-    # print([parse_response(resp) for resp in response])
     for resp in response:
         print(parse_response(resp))
 
