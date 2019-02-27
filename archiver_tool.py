@@ -37,11 +37,11 @@ def parse_response(resp):
     return '\n'.join(output)
 
 @asyncio.coroutine
-def do_request(args):
+def do_request(start, end, signals):
     loop = asyncio.get_event_loop()
     futures, responses = [], []
-    for sig in args.signals:
-        payload = makequerypayload(sig, args.start, args.end)
+    for sig in signals:
+        payload = makequerypayload(sig, start, end)
         futures.append(loop.run_in_executor(
                 None,
                 partial(requests.post, url=QUERYURL, json=payload),
@@ -74,8 +74,19 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
+    attributes = []
+    for sig in args.signals:
+        search_payload = {
+                'target': sig,
+                'cs': CONTROLURL,
+                }
+        search_resp = requests.post(SEARCHURL, json=search_payload)
+        attributes += json.loads(search_resp.text)
+
     loop = asyncio.get_event_loop()
-    response = loop.run_until_complete(do_request(args))
+    response = loop.run_until_complete(
+            do_request(args.start, args.end, attributes)
+            )
     for resp in response:
         print(parse_response(resp))
 
