@@ -54,18 +54,26 @@ def do_request(start, end, signals):
 if __name__=="__main__":
     parser = ArgumentParser(description='Get data from HDB++ archiver')
     parser.add_argument(
-            'signals',
+            'signal',
             type=str,
             nargs='+',
-            help='Signal(s) to acquire',
+            help='''
+            Signal(s) to acquire.
+            These are all interpreted as regex's beginning and ending
+            with '.*'.
+            The wildcard character, '*', will not work as in a POSIX
+            shell, but will be interpreted as part of the regex.  Where
+            you would use '*' at a POSIX shell, you probably want '.*'.
+            ''',
             )
-    parser.add_argument(
+    required = parser.add_argument_group('required arguments')
+    required.add_argument(
             '-s', '--start',
             type=str,
             required=True,
             help='Start of time-range',
             )
-    parser.add_argument(
+    required.add_argument(
             '-e', '--end',
             type=str,
             required=True,
@@ -75,7 +83,7 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     attributes = []
-    for sig in args.signals:
+    for sig in args.signal:
         search_payload = {
                 'target': sig,
                 'cs': CONTROLURL,
