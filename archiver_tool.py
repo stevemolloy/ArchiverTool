@@ -64,6 +64,9 @@ if __name__=="__main__":
             The wildcard character, '*', will not work as in a POSIX
             shell, but will be interpreted as part of the regex.  Where
             you would use '*' at a POSIX shell, you probably want '.*'.
+            On ZSH, the ".*" will give an error -- zsh: no matches found.
+            This is due to old globbing rules in that shell, and you need
+            to escape the wildcard character to make it work -- ".\*"
             ''',
             )
     required = parser.add_argument_group('required arguments')
