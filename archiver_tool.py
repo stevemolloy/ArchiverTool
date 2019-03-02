@@ -52,7 +52,17 @@ def do_request(start, end, signals):
     return responses
 
 if __name__=="__main__":
-    parser = ArgumentParser(description='Get data from HDB++ archiver')
+    parser = ArgumentParser(
+            description='Get data from HDB++ archiver',
+            epilog='''
+            When specifying signals, not that the wildcard
+            character, '*', will not work as in a POSIX
+            shell, but will be interpreted as part of the regex.  Where
+            you would use '*' at a POSIX shell, you probably want '.*'.
+            On ZSH, the '.*' will give an error -- zsh: no matches found.
+            This is due to old globbing rules in that shell, and you need
+            to escape the wildcard character to make it work -- '.\*'
+            ''')
     parser.add_argument(
             'signal',
             type=str,
