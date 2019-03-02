@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, FileType
 import requests
 import json
 import asyncio
@@ -33,8 +33,8 @@ def parse_response(resp):
     output.append('# ' + data['target'])
     output.append('# Time, Value')
     for vals in data['datapoints']:
-        output.append('{}, {}'.format(vals[1], vals[0]))
-    return '\n'.join(output)
+        output.append('{} {}'.format(vals[1], vals[0]))
+    return '\n'.join(output) + '\n'
 
 @asyncio.coroutine
 def do_request(start, end, signals):
@@ -61,13 +61,15 @@ if __name__=="__main__":
             Signal(s) to acquire.
             These are all interpreted as regex's beginning and ending
             with '.*'.
-            The wildcard character, '*', will not work as in a POSIX
-            shell, but will be interpreted as part of the regex.  Where
-            you would use '*' at a POSIX shell, you probably want '.*'.
-            On ZSH, the ".*" will give an error -- zsh: no matches found.
-            This is due to old globbing rules in that shell, and you need
-            to escape the wildcard character to make it work -- ".\*"
             ''',
+           )
+    parser.add_argument(
+            '-f', '--file',
+            type=FileType('w'),
+            help='''
+            Name of file in which to save the data. Use of this option
+            suppresses standard output.
+            '''
             )
     required = parser.add_argument_group('required arguments')
     required.add_argument(
@@ -98,6 +100,10 @@ if __name__=="__main__":
     response = loop.run_until_complete(
             do_request(args.start, args.end, attributes)
             )
-    for resp in response:
-        print(parse_response(resp))
+    if args.file:
+        for resp in response:
+            args.file.write(parse_response(resp))
+    else:
+        for resp in response:
+            print(parse_response(resp))
 
