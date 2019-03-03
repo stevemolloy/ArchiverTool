@@ -41,6 +41,17 @@ def parse_response(resp):
         output.append('{} {}'.format(timestamp, vals[0]))
     return '\n'.join(output) + '\n'
 
+def get_attributes(search_strs):
+    attributes = []
+    for sig in search_strs:
+        search_payload = {
+                'target': sig,
+                'cs': CONTROLURL,
+                }
+        search_resp = requests.post(SEARCHURL, json=search_payload)
+        attributes += json.loads(search_resp.text)
+    return attributes
+
 @asyncio.coroutine
 def do_request(start, end, signals):
     loop = asyncio.get_event_loop()
@@ -95,16 +106,9 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    attributes = []
-    for sig in args.signal:
-        search_payload = {
-                'target': sig,
-                'cs': CONTROLURL,
-                }
-        search_resp = requests.post(SEARCHURL, json=search_payload)
-        attributes += json.loads(search_resp.text)
-
     loop = asyncio.get_event_loop()
+
+    attributes = get_attributes(args.signal)
     response = loop.run_until_complete(
             do_request(args.start, args.end, attributes)
             )
