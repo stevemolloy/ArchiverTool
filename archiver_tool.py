@@ -78,8 +78,9 @@ if __name__=="__main__":
     parser.add_argument(
             '-f', '--file', type=FileType('a'),
             help='''
-            Name of file in which to save the data. Use of this option
-            suppresses standard output.
+            Name of file in which to save the data. New data will be appended
+            if the file already exists. Use of this option suppresses standard
+            output.
             '''
             )
     required = parser.add_argument_group('required arguments')
