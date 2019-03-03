@@ -60,7 +60,7 @@ if __name__=="__main__":
     parser = ArgumentParser(
             description='Get data from HDB++ archiver',
             epilog='''
-            When specifying signals, not that the wildcard
+            When specifying signals, note that the wildcard
             character, '*', will not work as in a POSIX
             shell, but will be interpreted as part of the regex.  Where
             you would use '*' at a POSIX shell, you probably want '.*'.
@@ -69,18 +69,14 @@ if __name__=="__main__":
             to escape the wildcard character to make it work -- '.\*'
             ''')
     parser.add_argument(
-            'signal',
-            type=str,
-            nargs='+',
+            'signal', type=str, nargs='+',
             help='''
-            Signal(s) to acquire.
-            These are all interpreted as regex's beginning and ending
-            with '.*'.
+            Signal(s) to acquire. These are all interpreted as regex's
+            beginning and ending with '.*'.
             ''',
            )
     parser.add_argument(
-            '-f', '--file',
-            type=FileType('w'),
+            '-f', '--file', type=FileType('w'),
             help='''
             Name of file in which to save the data. Use of this option
             suppresses standard output.
@@ -88,15 +84,11 @@ if __name__=="__main__":
             )
     required = parser.add_argument_group('required arguments')
     required.add_argument(
-            '-s', '--start',
-            type=str,
-            required=True,
+            '-s', '--start', type=str, required=True,
             help='Start of time-range',
             )
     required.add_argument(
-            '-e', '--end',
-            type=str,
-            required=True,
+            '-e', '--end', type=str, required=True,
             help='End of time-range'
             )
 
