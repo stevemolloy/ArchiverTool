@@ -1,3 +1,5 @@
+from datetime import datetime
+from pytz import timezone
 from argparse import ArgumentParser, FileType
 import requests
 import json
@@ -8,6 +10,7 @@ BASEURL = 'http://control.maxiv.lu.se/general/archiving/'
 SEARCHURL = BASEURL + 'search'
 QUERYURL = BASEURL + 'query'
 CONTROLURL = "g-v-csdb-0.maxiv.lu.se:10000"
+UTC = timezone('UTC')
 
 def makesearchpayload(searchterm):
     return {
@@ -33,7 +36,9 @@ def parse_response(resp):
     output.append('# ' + data['target'])
     output.append('# Time, Value')
     for vals in data['datapoints']:
-        output.append('{} {}'.format(vals[1], vals[0]))
+        dt = datetime.fromtimestamp(vals[1] / 1000, tz=UTC)
+        timestamp = dt.strftime("%Y-%m-%d_%H:%M:%S.%f")
+        output.append('{} {}'.format(timestamp, vals[0]))
     return '\n'.join(output) + '\n'
 
 @asyncio.coroutine
