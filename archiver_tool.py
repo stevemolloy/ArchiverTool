@@ -76,7 +76,7 @@ if __name__=="__main__":
             ''',
            )
     parser.add_argument(
-            '-f', '--file', type=FileType('w'),
+            '-f', '--file', type=FileType('a'),
             help='''
             Name of file in which to save the data. Use of this option
             suppresses standard output.
