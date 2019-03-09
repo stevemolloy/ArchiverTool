@@ -19,10 +19,11 @@ def makesearchpayload(searchterm):
             'target': searchterm
             }
 
-def makequerypayload(signal, start, end):
+def makequerypayload(signal, start, end, interval):
     return {
             'targets': [{'target': signal, 'cs': CONTROLURL,}],
-            'range': {'from': start, 'to': end,}
+            'range': {'from': start, 'to': end,},
+            'interval': interval
             }
 
 def parse_response(resp):
@@ -56,11 +57,11 @@ def get_attributes(search_strs):
     return attributes
 
 @asyncio.coroutine
-def do_request(start, end, signals):
+def do_request(start, end, signals, interval):
     loop = asyncio.get_event_loop()
     futures, responses = [], []
     for sig in signals:
-        payload = makequerypayload(sig, start, end)
+        payload = makequerypayload(sig, start, end, interval)
         futures.append(loop.run_in_executor(
                 None,
                 partial(requests.post, url=QUERYURL, json=payload),
@@ -101,6 +102,16 @@ if __name__=="__main__":
             use with care. Use of this option suppresses standard output.
             '''
             )
+    parser.add_argument(
+            '-i', '--interval', type=str, default='0.1s',
+            help='''
+            Force a sampling interval for the data. By default this will be
+            0.1s; i.e., as dense as possible.
+            This should be written in the form of a number and a time-unit;
+            e.g., "1s" to sample every second, "2m" to sample every two
+            minutes, "1h" to sample every hour, etc.
+            '''
+            )
     required = parser.add_argument_group('required arguments')
     required.add_argument(
             '-s', '--start', type=str, required=True,
@@ -117,7 +128,7 @@ if __name__=="__main__":
 
     attributes = get_attributes(args.signal)
     response = loop.run_until_complete(
-            do_request(args.start, args.end, attributes)
+            do_request(args.start, args.end, attributes, args.interval)
             )
     if args.file:
         numfiles = len(attributes)
