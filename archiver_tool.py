@@ -97,8 +97,8 @@ if __name__=="__main__":
             with the name FILE.dat. In the case of multiple attribute
             aquisition, each attribute will have the name FILE001.dat,
             FILE002.dat, etc.
-            New data will be appended if the file(s) already exist(s). Use of
-            this option suppresses standard output.
+            If the file(s) already exist(s), it/they will be overwritten, so
+            use with care. Use of this option suppresses standard output.
             '''
             )
     required = parser.add_argument_group('required arguments')
