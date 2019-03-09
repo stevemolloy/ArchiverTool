@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import log10, ceil
 from pytz import timezone
 from argparse import ArgumentParser, FileType
 import requests
@@ -89,11 +90,15 @@ if __name__=="__main__":
             ''',
            )
     parser.add_argument(
-            '-f', '--file', type=FileType('a'),
+            '-f', '--file', type=str,
             help='''
-            Name of file in which to save the data. New data will be appended
-            if the file already exists. Use of this option suppresses standard
-            output.
+            Root name of file(s) in which to save the data. In the case of
+            aquisition of a single attribute, a single file will be created
+            with the name FILE.dat. In the case of multiple attribute
+            aquisition, each attribute will have the name FILE001.dat,
+            FILE002.dat, etc.
+            New data will be appended if the file(s) already exist(s). Use of
+            this option suppresses standard output.
             '''
             )
     required = parser.add_argument_group('required arguments')
@@ -115,8 +120,12 @@ if __name__=="__main__":
             do_request(args.start, args.end, attributes)
             )
     if args.file:
-        for resp in response:
-            args.file.write(parse_response(resp))
+        numfiles = len(attributes)
+        numdigits = ceil(log10(numfiles + 1))
+        for i, resp in enumerate(response):
+            filename = args.file + str(i+1).zfill(numdigits) + '.dat'
+            with open(filename, 'w') as f:
+                f.write(parse_response(resp))
     else:
         for resp in response:
             print(parse_response(resp))
