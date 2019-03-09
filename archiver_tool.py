@@ -33,8 +33,10 @@ def parse_response(resp):
     else:
         data = json.loads(resp.text)[0]
     output = []
-    output.append('# ' + data['target'])
-    output.append('# Time, Value')
+    target_str = data['target'].replace(CONTROLURL+'/', CONTROLURL+'//')
+    datetime_str = datetime.isoformat(datetime.now(), sep=':')
+    output.append('"# DATASET= tango://' + target_str + '"')
+    output.append('"# SNAPSHOT_TIME= ' + datetime_str + '"')
     for vals in data['datapoints']:
         dt = datetime.fromtimestamp(vals[1] / 1000, tz=UTC)
         timestamp = dt.strftime("%Y-%m-%d_%H:%M:%S.%f")
