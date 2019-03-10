@@ -1,11 +1,12 @@
 from datetime import datetime
 from math import log10, ceil
 from pytz import timezone
-from argparse import ArgumentParser, FileType
+from argparse import ArgumentParser, FileType, ArgumentTypeError
 import requests
 import json
 import asyncio
 from functools import partial
+import re
 
 BASEURL = 'http://control.maxiv.lu.se/general/archiving/'
 SEARCHURL = BASEURL + 'search'
@@ -72,6 +73,13 @@ def do_request(start, end, signals, interval):
     return responses
 
 if __name__=="__main__":
+    def interval_value(val):
+        if not re.match('\d+\.*\d*[smh]$', str(val)):
+            raise ArgumentTypeError(
+                    'INTERVAL must be a number followed by s, m, h, or d'
+                    )
+        return val
+
     parser = ArgumentParser(
             description='Get data from HDB++ archiver',
             epilog='''
@@ -103,7 +111,7 @@ if __name__=="__main__":
             '''
             )
     parser.add_argument(
-            '-i', '--interval', type=str, default='0.1s',
+            '-i', '--interval', type=interval_value, default='0.1s',
             help='''
             Force a sampling interval for the data. By default this will be
             0.1s; i.e., as dense as possible.
