@@ -13,6 +13,7 @@ SEARCHURL = BASEURL + 'search'
 QUERYURL = BASEURL + 'query'
 CONTROLURL = "g-v-csdb-0.maxiv.lu.se:10000"
 UTC = timezone('UTC')
+CET = timezone('CET')
 
 def makesearchpayload(searchterm):
     return {
@@ -21,9 +22,18 @@ def makesearchpayload(searchterm):
             }
 
 def makequerypayload(signal, start, end, interval):
+    start_naive = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+    end_naive = datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+    start_cet = CET.localize(start_naive)
+    end_cet = CET.localize(end_naive)
+    start_utc = start_cet.astimezone(UTC)
+    end_utc = end_cet.astimezone(UTC)
     return {
             'targets': [{'target': signal, 'cs': CONTROLURL,}],
-            'range': {'from': start, 'to': end,},
+            'range': {
+                'from': start_utc.isoformat(),
+                'to': end_utc.isoformat(),
+                },
             'interval': interval
             }
 
@@ -41,7 +51,7 @@ def parse_response(resp):
     output.append('"# DATASET= tango://' + target_str + '"')
     output.append('"# SNAPSHOT_TIME= ' + datetime_str + '"')
     for vals in data['datapoints']:
-        dt = datetime.fromtimestamp(vals[1] / 1000, tz=UTC)
+        dt = datetime.fromtimestamp(vals[1] / 1000) #, tz=CET)
         timestamp = dt.strftime("%Y-%m-%d_%H:%M:%S.%f")
         output.append('{} {}'.format(timestamp, vals[0]))
     return '\n'.join(output) + '\n'
