@@ -59,10 +59,7 @@ def parse_response(resp):
 def get_attributes(search_strs):
     attributes = []
     for sig in search_strs:
-        search_payload = {
-                'target': sig,
-                'cs': CONTROLURL,
-                }
+        search_payload = makesearchpayload(sig)
         search_resp = requests.post(SEARCHURL, json=search_payload)
         attributes += json.loads(search_resp.text)
     return attributes
