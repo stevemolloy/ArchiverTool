@@ -7,6 +7,7 @@ import json
 import asyncio
 from functools import partial
 import re
+import logging
 
 BASEURL = 'http://control.maxiv.lu.se/general/archiving/'
 SEARCHURL = BASEURL + 'search'
@@ -66,17 +67,27 @@ def get_attributes(search_strs):
 
 @asyncio.coroutine
 def do_request(start, end, signals, interval):
+    logger = logging.getLogger(__name__)
     loop = asyncio.get_event_loop()
     futures, responses = [], []
     for sig in signals:
         payload = makequerypayload(sig, start, end, interval)
+        logger.info('Submitting: {}'.format(payload))
         futures.append(loop.run_in_executor(
                 None,
                 partial(requests.post, url=QUERYURL, json=payload),
                 ))
-    for fut in futures:
+    task_count = len(futures)
+    for i, fut in enumerate(futures):
+        logger.info(
+                'Waiting for query {} of {} to complete'.format(
+                    i+1,
+                    task_count
+                    )
+                )
         resp = yield from fut
         responses.append(resp)
+        logger.info('Query {} of {} completed'.format(i+1, task_count))
     return responses
 
 if __name__=="__main__":
@@ -127,6 +138,10 @@ if __name__=="__main__":
             minutes, "1h" to sample every hour, etc.
             '''
             )
+    parser.add_argument(
+            '-v', '--verbose', action='store_true',
+            help='Verbose output'
+            )
     required = parser.add_argument_group('required arguments')
     required.add_argument(
             '-s', '--start', type=str, required=True,
@@ -138,18 +153,32 @@ if __name__=="__main__":
             )
 
     args = parser.parse_args()
+    verbose = args.verbose
+
+    logger = logging.getLogger(__name__)
+    if verbose:
+        logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s - - %(levelname)s - %(message)s'
+                )
+    else:
+        logging.basicConfig(
+                format='%(asctime)s - - %(levelname)s - %(message)s'
+                )
 
     loop = asyncio.get_event_loop()
 
     attributes = get_attributes(args.signal)
+    start, end, interval = args.start, args.end, args.interval
     response = loop.run_until_complete(
-            do_request(args.start, args.end, attributes, args.interval)
+            do_request(start, end, attributes, interval)
             )
     if args.file:
         numfiles = len(attributes)
         numdigits = ceil(log10(numfiles + 1))
         for i, resp in enumerate(response):
             filename = args.file + str(i+1).zfill(numdigits) + '.dat'
+            logger.info('Writing to {}'.format(filename))
             with open(filename, 'w') as f:
                 f.write(parse_response(resp))
     else:
