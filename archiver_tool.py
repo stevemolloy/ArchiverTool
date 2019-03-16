@@ -17,8 +17,8 @@ CET = timezone('CET')
 
 def makesearchpayload(searchterm):
     return {
+            'target': searchterm,
             'cs': CONTROLURL,
-            'target': searchterm
             }
 
 def makequerypayload(signal, start, end, interval):
