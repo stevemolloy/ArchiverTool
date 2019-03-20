@@ -58,13 +58,16 @@ def parse_response(resp):
     return '\n'.join(output) + '\n'
 
 def get_attributes(search_strs):
+    logger = logging.getLogger(__name__)
     if isinstance(search_strs, str):
         search_strs = [search_strs]
     attributes = []
     for sig in search_strs:
+        logger.info('Getting full attribute name for {}...'.format(sig))
         search_payload = makesearchpayload(sig)
         search_resp = requests.post(SEARCHURL, json=search_payload)
         attributes += json.loads(search_resp.text)
+    logger.info('...{}'.format(attributes))
     return attributes
 
 @asyncio.coroutine
