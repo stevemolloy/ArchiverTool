@@ -58,6 +58,8 @@ def parse_response(resp):
     return '\n'.join(output) + '\n'
 
 def get_attributes(search_strs):
+    if isinstance(search_strs, str):
+        search_strs = [search_strs]
     attributes = []
     for sig in search_strs:
         search_payload = makesearchpayload(sig)
