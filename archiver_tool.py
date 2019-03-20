@@ -63,9 +63,15 @@ def get_attributes(search_strs):
         search_strs = [search_strs]
     attributes = []
     for sig in search_strs:
-        logger.info('Getting full attribute name for {}...'.format(sig))
+        logger.info('Getting matching attribute names for {}...'.format(sig))
         search_payload = makesearchpayload(sig)
-        search_resp = requests.post(SEARCHURL, json=search_payload)
+        try:
+            search_resp = requests.post(SEARCHURL, json=search_payload)
+        except requests.exceptions.ConnectionError:
+            err_str = '''
+            Cannot reach {}. Make sure you are inside the MAX-IV firewall.
+            '''
+            raise ValueError(err_str.format(SEARCHURL))
         attributes += json.loads(search_resp.text)
     logger.info('...{}'.format(attributes))
     return attributes
