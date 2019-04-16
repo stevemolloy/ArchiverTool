@@ -101,6 +101,14 @@ def do_request(start, end, signals, interval):
         logger.info('Query {} of {} completed'.format(i+1, task_count))
     return responses
 
+def query(start, end, signals, interval):
+    responses = []
+    for sig in signals:
+        payload = makequerypayload(sig, start, end, interval)
+        resp = requests.post(url=QUERYURL, json=payload)
+        responses.append(resp)
+    return responses
+
 if __name__=="__main__":
     def interval_value(val):
         if not re.match('\d+\.*\d*[smh]$', str(val)):
