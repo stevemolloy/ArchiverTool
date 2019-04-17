@@ -101,13 +101,31 @@ def do_request(start, end, signals, interval):
         logger.info('Query {} of {} completed'.format(i+1, task_count))
     return responses
 
-def query(start, end, signals, interval):
+def sync_do_request(start, end, signals, interval):
     responses = []
     for sig in signals:
         payload = makequerypayload(sig, start, end, interval)
         resp = requests.post(url=QUERYURL, json=payload)
         responses.append(resp)
     return responses
+
+def query(start, end, signals, interval='0.1s'):
+    attrs = get_attributes(signals)
+    if len(attrs) == 0:
+        raise ValueError(f'No attribute matching {signals}')
+    if not len(attrs) == 1:
+        raise ValueError(f'Multiple attributes matched. {attrs}')
+    responses = sync_do_request(start, end, attrs, interval)
+    a = [parse_response(resp) for resp in responses]
+    datastr = a[0]
+    data, timestamp = [], []
+    for line in datastr.split('\n')[2:]:
+        split = line.split()
+        if len(split) < 2:
+            break
+        data.append(float(split[1]))
+        timestamp.append(datetime.strptime(split[0], "%Y-%m-%d_%H:%M:%S.%f"))
+    return (timestamp, data)
 
 if __name__=="__main__":
     def interval_value(val):
