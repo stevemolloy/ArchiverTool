@@ -112,7 +112,7 @@ def sync_do_request(start, end, signals, interval):
 def query(start, end, signals, interval='0.1s'):
     attrs = get_attributes(signals)
     if len(attrs) == 0:
-        raise ValueError('No attribute matching', signals')
+        raise ValueError('No attribute matching', signals)
     if not len(attrs) == 1:
         raise ValueError('Multiple attributes matched', attrs)
     responses = sync_do_request(start, end, attrs, interval)
