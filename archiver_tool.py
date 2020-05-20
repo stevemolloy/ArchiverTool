@@ -41,7 +41,7 @@ def makequerypayload(signal, start, end, interval):
 def parse_response(resp):
     if not resp.status_code == 200:
         data = {
-                'target': 'Attribute not found in HDB++',
+                'target': resp.text,
                 'datapoints': [],
                 }
     else:
@@ -205,6 +205,7 @@ if __name__=="__main__":
 
     loop = asyncio.get_event_loop()
 
+    logger.info(args.signal)
     attributes = get_attributes(args.signal)
     start, end, interval = args.start, args.end, args.interval
     response = loop.run_until_complete(
