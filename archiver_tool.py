@@ -65,6 +65,7 @@ def get_attributes(search_strs):
     for sig in search_strs:
         logger.info('Getting matching attribute names for {}...'.format(sig))
         search_payload = makesearchpayload(sig)
+        logger.info('Posting {} to {}'.format(search_payload, SEARCHURL))
         try:
             search_resp = requests.post(SEARCHURL, json=search_payload)
         except requests.exceptions.ConnectionError:
