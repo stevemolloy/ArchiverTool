@@ -63,7 +63,7 @@ def get_attributes(search_strs):
         search_strs = [search_strs]
     attributes = []
     for sig in search_strs:
-        logger.info('Getting matching attribute names for {}...'.format(sig))
+        logger.info('Getting matching attribute names for "{}"'.format(sig))
         search_payload = makesearchpayload(sig)
         logger.info('Posting {} to {}'.format(search_payload, SEARCHURL))
         try:
@@ -74,7 +74,7 @@ def get_attributes(search_strs):
             '''
             raise ValueError(err_str.format(SEARCHURL))
         attributes += json.loads(search_resp.text)
-    logger.info('...{}'.format(attributes))
+    logger.info('Found the following attributes: {}'.format(attributes))
     return attributes
 
 @asyncio.coroutine
