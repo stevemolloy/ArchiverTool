@@ -216,11 +216,11 @@ if __name__=="__main__":
     required = parser.add_argument_group('required arguments')
     required.add_argument(
             '-s', '--start', type=str, required=True,
-            help='Start of time-range',
+            help='Start of time-range in the format 2021-01-31T05:00:00',
             )
     required.add_argument(
             '-e', '--end', type=str, required=True,
-            help='End of time-range'
+            help='End of time-range in the format 2021-01-31T05:00:00',
             )
     args = parser.parse_args()
     verbose = True
