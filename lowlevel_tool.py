@@ -3,6 +3,12 @@ from cassandra.policies import AddressTranslator
 from datetime import datetime, timedelta, time
 from time import time as tic
 from itertools import chain
+from argparse import ArgumentParser, FileType, ArgumentTypeError
+from pytz import timezone
+import logging
+
+UTC = timezone('UTC')
+CET = timezone('CET')
 
 
 def parse_async_results(results):
@@ -131,10 +137,18 @@ class LowlevelSignal:
     def async_get_data(self, datetimerange):
         """Asynchronously request the data within this datetime-range"""
         periods, timeranges = self.parse_datetimerange(datetimerange)
-        return [self.session.execute_async(
+        resultsets = [self.session.execute_async(
                             self.data_query(date=p, timerange=t)
                             )
                 for p, t in zip(periods, timeranges)]
+        resultsets = [resultset.result() for resultset in resultsets]
+        data = []
+        t = []
+        for resultset in resultsets:
+            for row in resultset:
+                data.append(row.value_r)
+                t.append(row.data_time)
+        return t, data
 
     def parse_datetimerange(self, datetimerange):
         """
@@ -159,58 +173,88 @@ class LowlevelSignal:
         timeranges[-1] = (None, end)
         return periods, timeranges
 
+def parse_response(signame, resp):
+    timelist = resp[0]
+    datalist = resp[1]
+    output = []
+    datetime_str = datetime.isoformat(datetime.now(), sep=':')
+    output.append('"# DATASET= tango://' + signame + '"')
+    output.append('"# SNAPSHOT_TIME= ' + datetime_str + '"')
+    for t,dat in zip(timelist, datalist):
+        timestamp = t.strftime("%Y-%m-%d_%H:%M:%S.%f")
+        output.append('{} {}'.format(timestamp, dat))
+    return '\n'.join(output) + '\n'
+
+
 if __name__=="__main__":
-    att = 'r1-101s/dia/dcct-01/current'
+    def interval_value(val):
+        if not re.match('\d+\.*\d*[smh]$', str(val)):
+            raise ArgumentTypeError(
+                    'INTERVAL must be a number followed by s, m, h, or d'
+                    )
+        return val
+
+    parser = ArgumentParser(
+            description='Low-level API to the HDB++ archiver',
+            )
+    parser.add_argument(
+            'signal', type=str,
+            help='''
+            Signal to acquire. Must be a single name, with no wildcards.
+            It is not possible to aquire multiple signals with one call.
+            ''',
+           )
+    parser.add_argument(
+            '-f', '--file', type=str,
+            help='''
+            Root name of file in which to save the data.
+            A single file will be created with the name FILE.dat.
+            If the file already exists, it will be overwritten, so
+            use with care. Use of this option suppresses standard output.
+            '''
+            )
+    required = parser.add_argument_group('required arguments')
+    required.add_argument(
+            '-s', '--start', type=str, required=True,
+            help='Start of time-range',
+            )
+    required.add_argument(
+            '-e', '--end', type=str, required=True,
+            help='End of time-range'
+            )
+    args = parser.parse_args()
+    verbose = True
+    logger = logging.getLogger(__name__)
+    if verbose:
+        logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s - - %(levelname)s - %(message)s'
+                )
+    else:
+        logging.basicConfig(
+                format='%(asctime)s - - %(levelname)s - %(message)s'
+                )
+
+    start_naive = datetime.strptime(args.start, "%Y-%m-%dT%H:%M:%S")
+    end_naive = datetime.strptime(args.end, "%Y-%m-%dT%H:%M:%S")
+    start_cet = CET.localize(start_naive)
+    end_cet = CET.localize(end_naive)
+    start_utc = start_cet.astimezone(UTC)
+    end_utc = end_cet.astimezone(UTC)
+
+    att = args.signal
     a = LowlevelSignal(att)
 
-    start = datetime(2019, 1, 22, 17, 0, 0)
-    end = datetime(2019, 1, 25, 15, 0, 0)
-    periods, timeranges = a.parse_datetimerange((start, end))
+    print(start_utc, end_utc)
 
-    res = a.async_get_data((start, end))
-    for row in res:
-        print(row.result())
+    res = a.async_get_data((start_utc, end_utc))
+    resp = parse_response(args.signal, res)
 
-    # async_runtime, sync_runtime, speedup = [], [], []
-    # for iteration in range(20):
-    #     t = tic()
-    #     results = []
-    #     results.append(a.get_data((datetime(2019, 2, 13, 0, 5, 0),
-    #                                       datetime(2019, 2, 13, 23, 30, 0)))[0])
-    #     results.append(a.get_data((datetime(2019, 2, 14, 0, 5, 0),
-    #                                       datetime(2019, 2, 14, 23, 30, 0)))[0])
-    #     results.append(a.get_data((datetime(2019, 2, 15, 0, 5, 0),
-    #                                       datetime(2019, 2, 15, 23, 30, 0)))[0])
-    #     results.append(a.get_data((datetime(2019, 2, 16, 0, 5, 0),
-    #                                       datetime(2019, 2, 16, 23, 30, 0)))[0])
-    #     results.append(a.get_data((datetime(2019, 2, 17, 0, 5, 0),
-    #                                       datetime(2019, 2, 17, 23, 30, 0)))[0])
-    #     results.append(a.get_data((datetime(2019, 2, 18, 0, 5, 0),
-    #                                       datetime(2019, 2, 18, 23, 30, 0)))[0])
-    #     sync_runtime.append(tic() - t)
+    if args.file:
+        filename = args.file + '.dat'
+        with open(filename, 'w') as f:
+            f.write(resp)
+    else:
+        print(resp)
 
-    #     t = tic()
-    #     futures = []
-    #     futures.append(a.async_get_data((datetime(2019, 2, 13, 0, 5, 0),
-    #                                             datetime(2019, 2, 13, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_data((datetime(2019, 2, 14, 0, 5, 0),
-    #                                             datetime(2019, 2, 14, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_data((datetime(2019, 2, 15, 0, 5, 0),
-    #                                             datetime(2019, 2, 15, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_data((datetime(2019, 2, 16, 0, 5, 0),
-    #                                             datetime(2019, 2, 16, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_data((datetime(2019, 2, 17, 0, 5, 0),
-    #                                             datetime(2019, 2, 17, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_data((datetime(2019, 2, 18, 0, 5, 0),
-    #                                             datetime(2019, 2, 18, 23, 30, 0)))[0])
-    #     results = [fut.result() for fut in futures]
-    #     async_runtime.append(tic() - t)
-
-    #     print(iteration, ': Speedup: {}'.format(sync_runtime[-1] - async_runtime[-1]))
-    #     speedup.append(sync_runtime[-1] - async_runtime[-1])
-
-    # print('\n')
-    # print('Async mean = {:0.3f}'.format(sum(async_runtime) / len(async_runtime)))
-    # print('Sync mean = {:0.3f}'.format(sum(sync_runtime) / len(sync_runtime)))
-    # print('Speedup mean = {:0.3f}'.format(sum(speedup) / len(speedup)))
 
