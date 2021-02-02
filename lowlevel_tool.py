@@ -1,6 +1,7 @@
 from cassandra.cluster import Cluster
 from cassandra.policies import AddressTranslator
 from datetime import datetime, timedelta, time
+from time import time as tic
 from itertools import chain
 
 
@@ -160,7 +161,7 @@ class LowlevelSignal:
 
 if __name__=="__main__":
     att = 'r1-101s/dia/dcct-01/current'
-    a = Signal(att)
+    a = LowlevelSignal(att)
 
     start = datetime(2019, 1, 22, 17, 0, 0)
     end = datetime(2019, 1, 25, 15, 0, 0)
@@ -172,38 +173,38 @@ if __name__=="__main__":
 
     # async_runtime, sync_runtime, speedup = [], [], []
     # for iteration in range(20):
-    #     tic = time()
+    #     t = tic()
     #     results = []
-    #     results.append(a.get_archived_data((datetime(2019, 2, 13, 0, 5, 0),
+    #     results.append(a.get_data((datetime(2019, 2, 13, 0, 5, 0),
     #                                       datetime(2019, 2, 13, 23, 30, 0)))[0])
-    #     results.append(a.get_archived_data((datetime(2019, 2, 14, 0, 5, 0),
+    #     results.append(a.get_data((datetime(2019, 2, 14, 0, 5, 0),
     #                                       datetime(2019, 2, 14, 23, 30, 0)))[0])
-    #     results.append(a.get_archived_data((datetime(2019, 2, 15, 0, 5, 0),
+    #     results.append(a.get_data((datetime(2019, 2, 15, 0, 5, 0),
     #                                       datetime(2019, 2, 15, 23, 30, 0)))[0])
-    #     results.append(a.get_archived_data((datetime(2019, 2, 16, 0, 5, 0),
+    #     results.append(a.get_data((datetime(2019, 2, 16, 0, 5, 0),
     #                                       datetime(2019, 2, 16, 23, 30, 0)))[0])
-    #     results.append(a.get_archived_data((datetime(2019, 2, 17, 0, 5, 0),
+    #     results.append(a.get_data((datetime(2019, 2, 17, 0, 5, 0),
     #                                       datetime(2019, 2, 17, 23, 30, 0)))[0])
-    #     results.append(a.get_archived_data((datetime(2019, 2, 18, 0, 5, 0),
+    #     results.append(a.get_data((datetime(2019, 2, 18, 0, 5, 0),
     #                                       datetime(2019, 2, 18, 23, 30, 0)))[0])
-    #     sync_runtime.append(time() - tic)
+    #     sync_runtime.append(tic() - t)
 
-    #     tic = time()
+    #     t = tic()
     #     futures = []
-    #     futures.append(a.async_get_archived_data((datetime(2019, 2, 13, 0, 5, 0),
+    #     futures.append(a.async_get_data((datetime(2019, 2, 13, 0, 5, 0),
     #                                             datetime(2019, 2, 13, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_archived_data((datetime(2019, 2, 14, 0, 5, 0),
+    #     futures.append(a.async_get_data((datetime(2019, 2, 14, 0, 5, 0),
     #                                             datetime(2019, 2, 14, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_archived_data((datetime(2019, 2, 15, 0, 5, 0),
+    #     futures.append(a.async_get_data((datetime(2019, 2, 15, 0, 5, 0),
     #                                             datetime(2019, 2, 15, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_archived_data((datetime(2019, 2, 16, 0, 5, 0),
+    #     futures.append(a.async_get_data((datetime(2019, 2, 16, 0, 5, 0),
     #                                             datetime(2019, 2, 16, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_archived_data((datetime(2019, 2, 17, 0, 5, 0),
+    #     futures.append(a.async_get_data((datetime(2019, 2, 17, 0, 5, 0),
     #                                             datetime(2019, 2, 17, 23, 30, 0)))[0])
-    #     futures.append(a.async_get_archived_data((datetime(2019, 2, 18, 0, 5, 0),
+    #     futures.append(a.async_get_data((datetime(2019, 2, 18, 0, 5, 0),
     #                                             datetime(2019, 2, 18, 23, 30, 0)))[0])
     #     results = [fut.result() for fut in futures]
-    #     async_runtime.append(time() - tic)
+    #     async_runtime.append(tic() - t)
 
     #     print(iteration, ': Speedup: {}'.format(sync_runtime[-1] - async_runtime[-1]))
     #     speedup.append(sync_runtime[-1] - async_runtime[-1])
