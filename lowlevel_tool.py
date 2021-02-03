@@ -1,5 +1,6 @@
 from cassandra.cluster import Cluster
 from cassandra.policies import AddressTranslator
+from cassandra.policies import DCAwareRoundRobinPolicy
 from datetime import datetime, timedelta, time
 from time import time as tic
 from itertools import chain
@@ -68,7 +69,8 @@ class LowlevelSignal:
         cluster = Cluster(
                 hosts,
                 connect_timeout=1,
-                address_translator=translator
+                address_translator=translator,
+                load_balancing_policy=DCAwareRoundRobinPolicy(local_dc='DC1'),
                 )
         self.session = cluster.connect('hdb')
         self.id_future = self.session.execute_async(self.conf_query)
