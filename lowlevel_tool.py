@@ -29,9 +29,8 @@ class LowlevelSignal:
         self.att = signal
         self._att_id = None
         self._datatype = None
-        DC_1 = ['172.16.2.50', '172.16.2.69', '172.16.2.70', '172.16.2.71',]
-        DC_2 = ['172.16.2.32', '172.16.2.66', '172.16.2.34', '172.16.2.67',
-                '172.16.2.51', '172.16.2.68']
+        DC_1 = ['172.16.2.69', '172.16.2.70', '172.16.2.71',]
+        DC_2 = ['172.16.2.66', '172.16.2.67', '172.16.2.68']
 
         # Simple Network mapper to resolve green and blue addresses
         class NetworkAdressTranslator(AddressTranslator):
