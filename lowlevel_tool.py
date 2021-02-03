@@ -244,8 +244,6 @@ if __name__=="__main__":
     att = args.signal
     a = LowlevelSignal(att)
 
-    print(start_utc, end_utc)
-
     res = a.async_get_data((start_utc, end_utc))
     resp = parse_response(args.signal, res)
 
