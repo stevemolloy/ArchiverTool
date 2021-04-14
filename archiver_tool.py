@@ -12,7 +12,24 @@ import logging
 BASEURL = 'http://control.maxiv.lu.se/general/archiving/'
 SEARCHURL = BASEURL + 'search'
 QUERYURL = BASEURL + 'query'
-CONTROLURL = "g-v-csdb-0.maxiv.lu.se:10000"
+CONTROLURL_LIST = {
+        'accelerator': "g-v-csdb-0.maxiv.lu.se:10000",
+        'balder':      "b-v-balder-csdb-0.maxiv.lu.se:10000",
+        'biomax':      "b-v-biomax-csdb-0.maxiv.lu.se:10000",
+        'bloch':       "b-v-bloch-csdb-0.maxiv.lu.se:10000",
+        'cosaxs':      "b-v-cosaxs-csdb-0.maxiv.lu.se:10000",
+        'cry':         "b-v-cry-csdb-0.maxiv.lu.se:10000",
+        'danmax':      "b-v-danmax-csdb-0.maxiv.lu.se:10000",
+        'femtomax':    "b-v-femtomax-csdb-0.maxiv.lu.se:10000",
+        'finest':      "b-v-finest-csdb-0.maxiv.lu.se:10000",
+        'flexpes':     "b-v-flexpes-csdb-0.maxiv.lu.se:10000",
+        'hippie':      "b-v-hippie-csdb-0.maxiv.lu.se:10000",
+        'maxpeem':     "b-v-maxpeem-csdb-0.maxiv.lu.se:10000",
+        'nanomax':     "b-v-nanomax-csdb-0.maxiv.lu.se:10000",
+        'softimax':    "b-v-softimax-csdb-0.maxiv.lu.se:10000",
+        'species':     "b-v-species-csdb-0.maxiv.lu.se:10000",
+        'veritas':     "b-v-veritas-csdb-0.maxiv.lu.se:10000",
+        }
 UTC = timezone('UTC')
 CET = timezone('CET')
 
@@ -155,6 +172,13 @@ if __name__=="__main__":
             ''',
            )
     parser.add_argument(
+            '-d', '--database', default='accelerator', type=str,
+            help='''
+            The database you want to query. Typically this will be
+            "accelerator" or the name of your beamline.
+            '''
+            )
+    parser.add_argument(
             '-f', '--file', type=str,
             help='''
             Root name of file(s) in which to save the data. In the case of
@@ -192,6 +216,8 @@ if __name__=="__main__":
 
     args = parser.parse_args()
     verbose = args.verbose
+
+    CONTROLURL = CONTROLURL_LIST[args.database.lower()]
 
     logger = logging.getLogger(__name__)
     if verbose:
